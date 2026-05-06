@@ -3,7 +3,7 @@
 Incident Response Playbook Generator
 
 AI-powered agent that generates customized incident response playbooks
-following NIST SP 800-61. Supports 4 input modes and 8+ LLM providers.
+following NIST SP 800-61 Rev. 3. Supports 4 input modes and 8+ LLM providers.
 
 Usage:
     # CLI argument mode
@@ -51,7 +51,7 @@ def print_banner() -> None:
     click.echo("""
 ╔══════════════════════════════════════════════════════════════╗
 ║     🛡️  Incident Response Playbook Generator               ║
-║     AI-powered • NIST SP 800-61 • Multi-provider            ║
+║     AI-powered • NIST SP 800-61 Rev. 3 • Multi-provider            ║
 ╚══════════════════════════════════════════════════════════════╝
 """)
 

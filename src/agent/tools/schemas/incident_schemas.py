@@ -36,7 +36,7 @@ INCIDENT_CLASSIFIER_SCHEMA = {
 PLAYBOOK_GENERATOR_SCHEMA = {
     "name": "generate_playbook",
     "description": (
-        "Generate a complete incident response playbook following NIST SP 800-61 "
+        "Generate a complete incident response playbook following NIST SP 800-61 Rev. 3 "
         "with 5 phases: Detection, Containment, Eradication, Recovery, Lessons Learned."
     ),
     "parameters": {

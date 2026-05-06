@@ -12,7 +12,7 @@ The tool uses the NIST incident categorization framework and maps to MITRE ATT&C
 
 PLAYBOOK_GENERATOR_DESCRIPTION = """Generate a complete incident response playbook.
 
-Use this tool to create a structured, actionable playbook following NIST SP 800-61
+Use this tool to create a structured, actionable playbook following NIST SP 800-61 Rev. 3
 with all 5 phases:
 1. Detection & Analysis — Identify scope, confirm the incident, assess impact
 2. Containment — Stop the bleeding, isolate affected systems

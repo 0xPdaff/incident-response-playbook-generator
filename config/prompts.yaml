@@ -37,7 +37,7 @@ classification:
 playbook_generation:
   system: |
     You are a senior incident response consultant with 20+ years of experience.
-    You generate detailed, actionable incident response playbooks following NIST SP 800-61.
+    You generate detailed, actionable incident response playbooks following NIST SP 800-61 Rev. 3.
 
     ORGANIZATION CONTEXT:
     - Name: {org_name}

@@ -24,7 +24,7 @@ app = FastAPI(
     title="Incident Response Playbook Generator",
     description=(
         "AI-powered agent that generates customized incident response playbooks "
-        "following NIST SP 800-61. Supports multiple LLM providers with automatic "
+        "following NIST SP 800-61 Rev. 3. Supports multiple LLM providers with automatic "
         "fallback."
     ),
     version="1.0.0",

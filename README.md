@@ -1,6 +1,6 @@
 # Incident Response Playbook Generator
 
-> AI-powered agent that generates customized NIST SP 800-61 incident response playbooks with executable commands, timelines, and escalation paths.
+> AI-powered agent that generates customized NIST SP 800-61 Rev. 3 incident response playbooks with executable commands, timelines, and escalation paths.
 
 ## 🎯 What This Project Demonstrates
 
@@ -322,7 +322,7 @@ The demo script showcases all input modes and checks provider availability.
 
 - [x] Multi-provider LLM support with fallback
 - [x] 4 input modes (CLI arg, interactive, API, file)
-- [x] NIST SP 800-61 structured playbooks
+- [x] NIST SP 800-61 Rev. 3 structured playbooks
 - [x] Org profile-aware command generation
 - [x] Input validation and PII detection
 - [x] Markdown and PDF output
@@ -335,7 +335,7 @@ The demo script showcases all input modes and checks provider availability.
 
 ## 📚 References
 
-- [NIST SP 800-61 Rev. 2](https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final) — Computer Security Incident Handling Guide (core playbook structure)
+- [NIST SP 800-61 Rev. 3](https://csrc.nist.gov/pubs/sp/800/61/r3/final) — Computer Security Incident Handling Guide (core playbook structure)
 - [MITRE ATT&CK Framework](https://attack.mitre.org/) — Adversary tactics, techniques, and procedures referenced in classifications
 - [SANS Incident Handler's Handbook](https://www.sans.org/white-papers/33901/) — Practical incident response methodology
 - [FastAPI](https://fastapi.tiangolo.com/) — Modern async Python web framework used for the REST API

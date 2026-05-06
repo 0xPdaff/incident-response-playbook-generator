@@ -14,7 +14,7 @@ An AI-powered agent that generates customized incident response playbooks for cy
 6. Automated containment scripts are generated
 7. Clear escalation criteria (leadership, legal, law enforcement)
 8. Output in Markdown + optional PDF via WeasyPrint
-9. Knowledge base: NIST SP 800-61, SANS, MITRE ATT&CK — embedded, not real-time search
+9. Knowledge base: NIST SP 800-61 Rev. 3, SANS, MITRE ATT&CK — embedded, not real-time search
 10. Agent does NOT execute real commands — only generates documentation
 11. This is a playbook generator, not an incident management system
 12. **Full multi-provider:** OpenAI, Anthropic, Deepseek, Minimax, Kimi, Qwen, GLM, Ollama local — with configurable fallback
