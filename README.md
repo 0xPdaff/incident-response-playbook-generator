@@ -58,7 +58,7 @@ flowchart TD
 ### Standard Installation
 
 ```bash
-git clone https://github.com/0xPdaff/01-incident-response-playbook.git
+git clone https://github.com/0xPdaff/incident-response-playbook-generator.git
 cd 01-incident-response-playbook
 pip install -r requirements.txt
 cp .env.example .env  # Add your API keys
