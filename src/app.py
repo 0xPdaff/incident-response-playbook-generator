@@ -145,6 +145,7 @@ def _run_cli_mode(description: str, options: dict) -> None:
         description=validation.sanitized_description,
         severity=validation.severity,
         provider=validation.provider,
+        interactive=False,
     )
 
     if not result["success"]:
@@ -234,6 +235,7 @@ def _run_interactive_mode(options: dict) -> None:
         description=validation.sanitized_description,
         severity=validation.severity,
         provider=validation.provider,
+        interactive=True,
     )
 
     if not result["success"]:

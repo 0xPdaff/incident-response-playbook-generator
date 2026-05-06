@@ -1,5 +1,11 @@
 # Organization Profile Template
 # Customize this file to match your organization's environment.
+# Copy from org_profile.example.yaml and fill in your details.
+#
+# If this file has demo: true, the agent will ask for relevant
+# stack info interactively instead of assuming the data.
+
+demo: true  # <-- Set to false after filling in your real data
 
 # Organization metadata
 org:

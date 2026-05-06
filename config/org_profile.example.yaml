@@ -1,0 +1,53 @@
+# Organization Profile — Production Template
+# Copy this file to org_profile.yaml and fill in your real data.
+# Set demo: false after completing your profile.
+
+demo: false
+
+# Organization metadata
+org:
+  name: ""           # e.g., "Your Company Name"
+  industry: ""       # e.g., "finance", "healthcare", "technology"
+  size: ""           # small (<100), medium (100-1000), large (>1000)
+  region: ""         # e.g., "south-america", "europe", "north-america"
+
+# Technology stack — leave empty to be asked interactively per incident
+tech_stack:
+  os: []                    # e.g., ["linux", "windows"]
+  cloud_providers: []       # e.g., ["aws", "azure", "gcp"]
+  primary_database: ""      # e.g., "postgresql", "mysql", "mssql"
+  container_platform: ""    # e.g., "kubernetes", "docker"
+  siem: ""                  # e.g., "splunk", "elastic", "qradar"
+  edr: ""                   # e.g., "crowdststrike", "sentinelone", "carbon black"
+  firewall: ""              # e.g., "palo-alto", "fortinet", "checkpoint"
+  identity_provider: ""     # e.g., "okta", "azure-ad", "ping"
+
+# Team structure for escalation paths
+teams:
+  soc:
+    contact: ""
+    escalation_threshold: "medium"
+  incident_commander:
+    contact: ""
+    escalation_threshold: "high"
+  legal:
+    contact: ""
+    escalation_threshold: "critical"
+  executive:
+    contact: ""
+    escalation_threshold: "critical"
+  communications:
+    contact: ""
+    escalation_threshold: "high"
+
+# Compliance requirements
+compliance:
+  frameworks: []                          # e.g., ["NIST CSF", "SOC 2", "GDPR", "PCI DSS"]
+  data_breach_notification_hours: 72
+  requires_law_enforcement_notification: false
+
+# Communication channels
+channels:
+  primary: ""               # e.g., "slack", "teams"
+  incident_channel: ""      # e.g., "#incident-response"
+  bridge_number: ""
