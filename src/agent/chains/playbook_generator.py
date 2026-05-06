@@ -15,6 +15,38 @@ from src.utils.helpers import (
 logger = logging.getLogger(__name__)
 
 
+def _load_nist_knowledge_base() -> str:
+    """Load the NIST SP 800-61r3 knowledge base for playbook generation.
+
+    Returns the knowledge base content as a string, or empty string if unavailable.
+    """
+    from src.utils.config import _resolve_project_root
+
+    kb_path = _resolve_project_root() / "config" / "knowledge_base" / "nist_800_61r3.md"
+    try:
+        if kb_path.exists():
+            content = kb_path.read_text(encoding="utf-8")
+            # Truncate to ~50K chars to stay within context limits
+            # while keeping the most important sections
+            max_chars = 50000
+            if len(content) > max_chars:
+                # Keep the header, life cycle, and Table 3 (Incident Response)
+                # Table 3 starts around the middle
+                header_end = content.find("## 3. CSF 2.0 Community Profile")
+                table3_start = content.find("## 3. CSF 2.0 Community Profile — Part 2: Incident Response")
+                if table3_start > 0:
+                    # Take first ~10K (overview + life cycle) + last ~40K (Table 3 IR)
+                    first_part = content[:min(10000, header_end + 5000)]
+                    second_part = content[table3_start:table3_start + 40000]
+                    content = first_part + "\n\n[... Preparation sections omitted for brevity ...]\n\n" + second_part
+                    if len(content) > max_chars:
+                        content = content[:max_chars]
+            return content
+    except Exception as e:
+        logger.warning(f"Failed to load NIST knowledge base: {e}")
+    return ""
+
+
 def build_playbook_prompt(
     description: str,
     classification: dict[str, Any],
@@ -36,11 +68,15 @@ def build_playbook_prompt(
     system_template = gen_prompts.get("system", "")
     user_template = gen_prompts.get("user", "")
 
+    # Load NIST knowledge base for enrichment
+    knowledge_base = _load_nist_knowledge_base()
+
     org = org_profile.get("org", {})
     tech = org_profile.get("tech_stack", {})
     compliance = org_profile.get("compliance", {})
 
     system_prompt = system_template.format(
+        knowledge_base=knowledge_base,
         org_name=org.get("name", "Unknown Organization"),
         org_industry=org.get("industry", "unknown"),
         org_size=org.get("size", "unknown"),

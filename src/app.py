@@ -219,28 +219,49 @@ def _run_interactive_mode(options: dict) -> None:
 
     click.echo("🚀 Interactive Mode — Describe your incident\n")
 
-    # Get incident description
-    description = click.prompt(
-        "📝 Describe the security incident",
-        type=str,
-    )
+    # Get incident description (retry until valid)
+    description = None
+    while description is None:
+        description = click.prompt(
+            "📝 Describe the security incident",
+            type=str,
+        )
+        if not description or len(description.strip()) < 10:
+            click.echo("❌ Description too short. Provide at least 10 characters. (Ctrl+C to cancel)")
+            description = None
 
-    if not description or len(description.strip()) < 10:
-        click.echo("❌ Description too short. Please provide at least 10 characters.")
-        return
-
-    # Get optional severity
+    # Get optional severity (retry until valid or empty)
     click.echo("\nSeverity levels: low, medium, high, critical")
     click.echo("(Leave empty to auto-infer)")
-    severity_input = click.prompt("🎯 Severity", default="", show_default=False)
-    severity = severity_input if severity_input else None
+    severity = None
+    while severity is None:
+        severity_input = click.prompt("🎯 Severity", default="", show_default=False)
+        if not severity_input:
+            break  # Empty = auto-infer
+        if severity_input.lower() in ("low", "medium", "high", "critical"):
+            severity = severity_input.lower()
+        else:
+            click.echo(f"❌ Invalid severity '{severity_input}'. Use: low, medium, high, critical (or leave empty)")
 
-    # Get optional provider
+    # Get optional provider (retry until valid or empty)
     default_prov = get_default_provider()
     click.echo(f"\nAvailable providers: {', '.join(SUPPORTED_PROVIDERS)}")
     click.echo(f"(Default: {default_prov})")
-    provider_input = click.prompt("🤖 Provider", default="", show_default=False)
-    provider = provider_input if provider_input else None
+    provider = None
+    while provider is None:
+        provider_input = click.prompt("🤖 Provider", default="", show_default=False)
+        if not provider_input:
+            break  # Empty = use default
+        if provider_input.lower() in SUPPORTED_PROVIDERS:
+            provider = provider_input.lower()
+        else:
+            use_default = click.confirm(
+                f"⚠️  Provider '{provider_input}' not found. Use default ({default_prov})?",
+                default=True,
+            )
+            if use_default:
+                break  # Use default
+            # else: re-ask
 
     click.echo("\n⏳ Generating playbook...\n")
 
@@ -319,7 +340,16 @@ def _run_file_mode(file_path: str, options: dict) -> None:
 
     if not description:
         click.echo("❌ File is empty.", err=True)
-        sys.exit(1)
+        retry = click.confirm("  Try another file?", default=False)
+        if retry:
+            new_path = click.prompt("  File path", type=str)
+            if new_path and Path(new_path).exists():
+                _run_file_mode(new_path, options)
+            else:
+                click.echo("  ❌ File not found. Exiting.", err=True)
+                sys.exit(1)
+        else:
+            sys.exit(1)
 
     click.echo(f"📋 Incident description loaded ({len(description)} chars)")
     _run_cli_mode(description, options)
@@ -725,7 +755,12 @@ def _run_setup_stack() -> None:
     # ── Organization ──
     click.echo()
     click.echo("  ── Organization ───────────────────────────────────")
-    org_name = click.prompt("  Organization name", default=_default("org", "name", "Your Organization"))
+    org_name = None
+    while org_name is None:
+        org_name = click.prompt("  Organization name", default=_default("org", "name", "Your Organization"))
+        if not org_name or not org_name.strip():
+            click.echo("  ❌ Organization name is required.")
+            org_name = None
     industry = click.prompt("  Industry (finance/healthcare/technology/...)", default=_default("org", "industry"))
     size = click.prompt("  Size (small/medium/large)", default=_default("org", "size", "medium"))
     region = click.prompt("  Region (north-america/europe/south-america/...)", default=_default("org", "region"))
@@ -746,8 +781,20 @@ def _run_setup_stack() -> None:
     click.echo()
     click.echo("  ── Compliance ─────────────────────────────────────")
     frameworks_input = click.prompt("  Compliance frameworks (comma-separated)", default=_default("compliance", "frameworks"))
-    breach_hours = click.prompt("  Data breach notification deadline (hours)", default=_default("compliance", "data_breach_notification_hours", "72"))
-    law_enf = click.prompt("  Requires law enforcement notification? (yes/no)", default="yes" if existing.get("compliance", {}).get("requires_law_enforcement_notification", False) else "no")
+    breach_hours = None
+    while breach_hours is None:
+        breach_hours_input = click.prompt("  Data breach notification deadline (hours)", default=_default("compliance", "data_breach_notification_hours", "72"))
+        if breach_hours_input.strip().isdigit():
+            breach_hours = int(breach_hours_input.strip())
+        else:
+            click.echo(f"  ❌ '{breach_hours_input}' is not a valid number. Enter hours (e.g., 72).")
+    law_enf = None
+    while law_enf is None:
+        law_enf_input = click.prompt("  Requires law enforcement notification? (yes/no)", default="yes" if existing.get("compliance", {}).get("requires_law_enforcement_notification", False) else "no")
+        if law_enf_input.strip().lower() in ("yes", "y", "no", "n"):
+            law_enf = law_enf_input.strip().lower()
+        else:
+            click.echo("  ❌ Please enter 'yes' or 'no'.")
 
     # ── Escalation Contacts ──
     click.echo()
@@ -801,8 +848,8 @@ def _run_setup_stack() -> None:
         },
         "compliance": {
             "frameworks": frameworks_list,
-            "data_breach_notification_hours": int(breach_hours) if breach_hours.strip().isdigit() else 72,
-            "requires_law_enforcement_notification": law_enf.lower() in ("yes", "y", "true"),
+            "data_breach_notification_hours": breach_hours,
+            "requires_law_enforcement_notification": law_enf in ("yes", "y", "true"),
         },
         "channels": {
             "primary": primary_ch.strip(),
