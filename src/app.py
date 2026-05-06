@@ -33,7 +33,7 @@ import click
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.utils.config import get_api_port, get_default_provider, get_log_level
+from src.utils.config import get_api_port, get_default_provider, get_log_level, load_yaml_config
 from src.utils.constants import SUPPORTED_PROVIDERS
 
 
@@ -69,6 +69,8 @@ def print_banner() -> None:
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose (DEBUG) logging.")
 @click.option("--extended-help", "-H", is_flag=True, help="Show extended usage guide with examples and provider info.")
 @click.option("--list-providers", is_flag=True, help="List all supported providers and their API key status.")
+@click.option("--show-stack", is_flag=True, help="Display the current organization profile and tech stack.")
+@click.option("--setup-stack", is_flag=True, help="Interactive setup wizard for the organization profile.")
 @click.pass_context
 def main(
     ctx: click.Context,
@@ -84,6 +86,8 @@ def main(
     verbose: bool,
     extended_help: bool,
     list_providers: bool,
+    show_stack: bool,
+    setup_stack: bool,
 ) -> None:
     """Incident Response Playbook Generator — AI-powered NIST playbooks."""
     ctx.ensure_object(dict)
@@ -101,6 +105,14 @@ def main(
     if list_providers:
         print_banner()
         _show_provider_status()
+        return
+
+    if show_stack:
+        _show_org_stack()
+        return
+
+    if setup_stack:
+        _run_setup_stack()
         return
 
     print_banner()
@@ -375,6 +387,8 @@ def _show_extended_help() -> None:
   --verbose         -v      Enable DEBUG logging                  off
   --extended-help   -H      Show this extended guide              off
   --list-providers          Show providers & API key status       off
+  --show-stack              Display org profile & tech stack      off
+  --setup-stack             Interactive org profile setup wizard   off
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   SUPPORTED PROVIDERS
@@ -418,6 +432,12 @@ def _show_extended_help() -> None:
 
   # Override default provider via environment
   DEFAULT_PROVIDER=deepseek python src/app.py -d "Malware on workstation"
+
+  # View your organization profile and tech stack
+  python src/app.py --show-stack
+
+  # Configure your organization profile interactively
+  python src/app.py --setup-stack
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   CONFIGURATION FILES
@@ -529,6 +549,253 @@ def _show_provider_status() -> None:
     click.echo()
     click.echo("  Legend:  ✓ = API key set in .env   ✗ = API key missing   N/A = local provider")
     click.echo("  Tip:    Run 'python src/app.py --list-providers' anytime to check status.")
+    click.echo()
+
+
+def _show_org_stack() -> None:
+    """Display the current organization profile and tech stack in a formatted table."""
+    from src.utils.config import get_org_profile
+
+    profile = get_org_profile()
+
+    click.echo("""
+╔══════════════════════════════════════════════════╗
+║     🏢  Organization Profile                     ║
+╚══════════════════════════════════════════════════╝
+""")
+
+    # Check if profile is empty or missing
+    if not profile or not profile.get("org", {}).get("name"):
+        click.echo("  ⚠️  No organization profile found.")
+        click.echo("  💡 Run 'python src/app.py --setup-stack' to create one.")
+        click.echo()
+        return
+
+    # Organization metadata
+    org = profile.get("org", {})
+    is_demo = profile.get("demo", True)
+    status = "📋 Demo (replace with your real data)" if is_demo else "✅ Active"
+
+    click.echo(f"  Organization   : {org.get('name', 'N/A')}")
+    click.echo(f"  Industry       : {org.get('industry', 'N/A')}")
+    click.echo(f"  Size           : {org.get('size', 'N/A')}")
+    click.echo(f"  Profile Status : {status}")
+    click.echo()
+
+    # Tech stack
+    tech = profile.get("tech_stack", {})
+    click.echo("  ── Tech Stack ──────────────────────────────────────")
+    if tech:
+        stack_fields = [
+            ("Operating Systems", "os", True),
+            ("Cloud Providers", "cloud_providers", True),
+            ("Database", "primary_database", False),
+            ("Container Platform", "container_platform", False),
+            ("SIEM", "siem", False),
+            ("EDR", "edr", False),
+            ("Firewall", "firewall", False),
+            ("Identity Provider", "identity_provider", False),
+        ]
+        for label, key, is_list in stack_fields:
+            value = tech.get(key, "")
+            if is_list and isinstance(value, list):
+                display = ", ".join(str(v) for v in value) if value else "—"
+            else:
+                display = str(value) if value else "—"
+            click.echo(f"  {label:<19}: {display}")
+    else:
+        click.echo("  (not configured)")
+    click.echo()
+
+    # Compliance
+    compliance = profile.get("compliance", {})
+    click.echo("  ── Compliance ──────────────────────────────────────")
+    if compliance:
+        frameworks = compliance.get("frameworks", [])
+        fw_display = ", ".join(str(f) for f in frameworks) if frameworks else "—"
+        click.echo(f"  Frameworks              : {fw_display}")
+        breach_hours = compliance.get("data_breach_notification_hours", "—")
+        click.echo(f"  Breach Notification     : {breach_hours} hours")
+        law_enf = compliance.get("requires_law_enforcement_notification", False)
+        click.echo(f"  Law Enforcement Notify  : {'Yes' if law_enf else 'No'}")
+    else:
+        click.echo("  (not configured)")
+    click.echo()
+
+    # Escalation contacts
+    teams = profile.get("teams", {})
+    click.echo("  ── Escalation Contacts ────────────────────────────")
+    if teams:
+        team_labels = [
+            ("SOC", "soc"),
+            ("Incident Commander", "incident_commander"),
+            ("Legal", "legal"),
+            ("Executive (CISO)", "executive"),
+            ("Communications", "communications"),
+        ]
+        for label, key in team_labels:
+            info = teams.get(key, {})
+            contact = info.get("contact", "")
+            threshold = info.get("escalation_threshold", "")
+            if contact:
+                click.echo(f"  {label:<21}: {contact} ({threshold}+)")
+            else:
+                click.echo(f"  {label:<21}: —")
+    else:
+        click.echo("  (not configured)")
+    click.echo()
+
+    click.echo("  💡 Run 'python src/app.py --setup-stack' to configure your profile.")
+    click.echo()
+
+
+def _run_setup_stack() -> None:
+    """Interactive wizard to configure the organization profile."""
+    from src.utils.config import get_org_profile, PROJECT_ROOT
+
+    profile = get_org_profile()
+    example = load_yaml_config("org_profile.example.yaml")
+    existing = profile if profile and profile.get("org", {}).get("name") else {}
+
+    click.echo("""
+╔══════════════════════════════════════════════════╗
+║     🔧  Organization Profile Setup               ║
+╚══════════════════════════════════════════════════╝
+""")
+
+    click.echo("This will configure your organization's profile for playbook generation.")
+    click.echo("Data is saved to config/org_profile.yaml")
+
+    # If existing profile, ask about overwrite
+    if existing:
+        click.echo()
+        click.echo(f"  ⚠️  An existing profile was found: {existing.get('org', {}).get('name', 'unknown')}")
+        action = click.prompt(
+            "  Choose action",
+            type=click.Choice(["overwrite", "edit", "cancel"]),
+            default="edit",
+        )
+        if action == "cancel":
+            click.echo("  Setup cancelled.")
+            return
+        if action == "overwrite":
+            existing = {}  # Start fresh from example
+    else:
+        action = "overwrite"
+        existing = example if example else {}
+
+    # Helper to get default value
+    def _default(section: str, key: str, fallback: str = "") -> str:
+        val = existing.get(section, {}).get(key, fallback)
+        if isinstance(val, list):
+            return ", ".join(str(v) for v in val)
+        return str(val) if val else fallback
+
+    # ── Organization ──
+    click.echo()
+    click.echo("  ── Organization ───────────────────────────────────")
+    org_name = click.prompt("  Organization name", default=_default("org", "name", "Your Organization"))
+    industry = click.prompt("  Industry (finance/healthcare/technology/...)", default=_default("org", "industry"))
+    size = click.prompt("  Size (small/medium/large)", default=_default("org", "size", "medium"))
+    region = click.prompt("  Region (north-america/europe/south-america/...)", default=_default("org", "region"))
+
+    # ── Tech Stack ──
+    click.echo()
+    click.echo("  ── Tech Stack ─────────────────────────────────────")
+    os_input = click.prompt("  Operating systems (comma-separated)", default=_default("tech_stack", "os", "windows"))
+    cloud_input = click.prompt("  Cloud providers (comma-separated, or empty)", default=_default("tech_stack", "cloud_providers"))
+    database = click.prompt("  Primary database", default=_default("tech_stack", "primary_database"))
+    container = click.prompt("  Container platform (or empty)", default=_default("tech_stack", "container_platform"))
+    siem = click.prompt("  SIEM platform", default=_default("tech_stack", "siem"))
+    edr = click.prompt("  EDR tool", default=_default("tech_stack", "edr"))
+    firewall = click.prompt("  Firewall vendor", default=_default("tech_stack", "firewall"))
+    idp = click.prompt("  Identity provider", default=_default("tech_stack", "identity_provider"))
+
+    # ── Compliance ──
+    click.echo()
+    click.echo("  ── Compliance ─────────────────────────────────────")
+    frameworks_input = click.prompt("  Compliance frameworks (comma-separated)", default=_default("compliance", "frameworks"))
+    breach_hours = click.prompt("  Data breach notification deadline (hours)", default=_default("compliance", "data_breach_notification_hours", "72"))
+    law_enf = click.prompt("  Requires law enforcement notification? (yes/no)", default="yes" if existing.get("compliance", {}).get("requires_law_enforcement_notification", False) else "no")
+
+    # ── Escalation Contacts ──
+    click.echo()
+    click.echo("  ── Escalation Contacts ────────────────────────────")
+    # For teams, the default is the contact field inside the sub-dict
+    def _team_default(team_key: str) -> str:
+        return existing.get("teams", {}).get(team_key, {}).get("contact", "")
+
+    soc_email = click.prompt("  SOC team email", default=_team_default("soc"))
+    ic_email = click.prompt("  Incident Commander email", default=_team_default("incident_commander"))
+    legal_email = click.prompt("  Legal team email", default=_team_default("legal"))
+    ciso_email = click.prompt("  CISO email", default=_team_default("executive"))
+    comms_email = click.prompt("  Communications team email", default=_team_default("communications"))
+
+    # ── Communication Channels ──
+    click.echo()
+    click.echo("  ── Communication Channels ─────────────────────────")
+    primary_ch = click.prompt("  Primary channel (slack/teams/etc)", default=_default("channels", "primary"))
+    incident_ch = click.prompt("  Incident channel", default=_default("channels", "incident_channel"))
+
+    # Parse comma-separated lists
+    os_list = [s.strip() for s in os_input.split(",") if s.strip()] if os_input.strip() else []
+    cloud_list = [s.strip() for s in cloud_input.split(",") if s.strip()] if cloud_input.strip() else []
+    frameworks_list = [s.strip() for s in frameworks_input.split(",") if s.strip()] if frameworks_input.strip() else []
+
+    # Build the profile dict
+    new_profile: dict[str, Any] = {
+        "demo": False,
+        "org": {
+            "name": org_name.strip(),
+            "industry": industry.strip(),
+            "size": size.strip(),
+            "region": region.strip(),
+        },
+        "tech_stack": {
+            "os": os_list,
+            "cloud_providers": cloud_list,
+            "primary_database": database.strip(),
+            "container_platform": container.strip(),
+            "siem": siem.strip(),
+            "edr": edr.strip(),
+            "firewall": firewall.strip(),
+            "identity_provider": idp.strip(),
+        },
+        "teams": {
+            "soc": {"contact": soc_email.strip(), "escalation_threshold": "medium"},
+            "incident_commander": {"contact": ic_email.strip(), "escalation_threshold": "high"},
+            "legal": {"contact": legal_email.strip(), "escalation_threshold": "critical"},
+            "executive": {"contact": ciso_email.strip(), "escalation_threshold": "critical"},
+            "communications": {"contact": comms_email.strip(), "escalation_threshold": "high"},
+        },
+        "compliance": {
+            "frameworks": frameworks_list,
+            "data_breach_notification_hours": int(breach_hours) if breach_hours.strip().isdigit() else 72,
+            "requires_law_enforcement_notification": law_enf.lower() in ("yes", "y", "true"),
+        },
+        "channels": {
+            "primary": primary_ch.strip(),
+            "incident_channel": incident_ch.strip(),
+            "bridge_number": existing.get("channels", {}).get("bridge_number", ""),
+        },
+    }
+
+    # Save to file
+    import yaml
+
+    config_path = PROJECT_ROOT / "config" / "org_profile.yaml"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(config_path, "w", encoding="utf-8") as f:
+        f.write("# Organization Profile\n")
+        f.write("# Generated by --setup-stack wizard.\n")
+        f.write("# Edit manually or re-run --setup-stack to update.\n")
+        f.write("\n")
+        yaml.dump(new_profile, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
+    click.echo()
+    click.echo("  ✅ Organization profile saved to config/org_profile.yaml")
+    click.echo("  Profile status: ✅ Active (demo: false)")
     click.echo()
 
 

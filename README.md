@@ -106,6 +106,20 @@ python src/app.py -d "..." --provider anthropic
 export DEFAULT_PROVIDER=deepseek
 ```
 
+### Organization Profile
+
+View your current organization profile and tech stack:
+```bash
+python src/app.py --show-stack
+```
+
+Configure your organization profile interactively:
+```bash
+python src/app.py --setup-stack
+```
+
+The setup wizard guides you through configuring your organization name, industry, tech stack, compliance frameworks, escalation contacts, and communication channels. Data is saved to `config/org_profile.yaml` with `demo: false`.
+
 ## 📖 CLI Reference
 
 ### Flags Overview
@@ -125,6 +139,8 @@ export DEFAULT_PROVIDER=deepseek
 | `--extended-help` | `-H` | Show extended usage guide | flag | off |
 | `--list-providers` | | Show provider & API key status | flag | off |
 | `--help` | | Show basic help | flag | off |
+| `--show-stack` | | Display org profile & tech stack | flag | off |
+| `--setup-stack` | | Interactive org profile setup wizard | flag | off |
 
 ### Input Modes
 
