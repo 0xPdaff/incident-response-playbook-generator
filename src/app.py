@@ -23,6 +23,7 @@ Usage:
 """
 
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -66,6 +67,8 @@ def print_banner() -> None:
 @click.option("--output-dir", type=click.Path(), help="Output directory for generated files.")
 @click.option("--port", type=int, default=None, help="API server port (default: from config or 8000).")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose (DEBUG) logging.")
+@click.option("--extended-help", "-H", is_flag=True, help="Show extended usage guide with examples and provider info.")
+@click.option("--list-providers", is_flag=True, help="List all supported providers and their API key status.")
 @click.pass_context
 def main(
     ctx: click.Context,
@@ -79,6 +82,8 @@ def main(
     output_dir: str | None,
     port: int | None,
     verbose: bool,
+    extended_help: bool,
+    list_providers: bool,
 ) -> None:
     """Incident Response Playbook Generator — AI-powered NIST playbooks."""
     ctx.ensure_object(dict)
@@ -86,6 +91,18 @@ def main(
     # Setup
     log_level = "DEBUG" if verbose else get_log_level()
     setup_logging(log_level)
+
+    # Handle meta-commands before banner
+    if extended_help:
+        print_banner()
+        _show_extended_help()
+        return
+
+    if list_providers:
+        print_banner()
+        _show_provider_status()
+        return
+
     print_banner()
 
     ctx.obj["severity"] = severity
@@ -313,6 +330,206 @@ def _start_api_server(port: int | None) -> None:
         reload=False,
         log_level="info",
     )
+
+
+def _show_extended_help() -> None:
+    """Display the extended help guide with examples, providers, and tips."""
+    click.echo("""
+╔══════════════════════════════════════════════════════════════════════════╗
+║                     EXTENDED USAGE GUIDE                                ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  INPUT MODES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. CLI ARGUMENT MODE  (fastest — one-liner)
+     $ python src/app.py -d "Ransomware detected on finance server"
+
+  2. INTERACTIVE MODE   (guided prompts for description, severity, provider)
+     $ python src/app.py -i
+
+  3. FILE INPUT MODE    (load description from a text file)
+     $ python src/app.py -f incident_description.txt
+
+  4. API SERVER MODE    (REST API with Swagger UI)
+     $ python src/app.py --serve --port 8080
+     Swagger UI → http://localhost:8080/docs
+     POST /api/v1/playbook with JSON body
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ALL FLAGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Flag              Short   Description                          Default
+  ─────────────────────────────────────────────────────────────────────────
+  --description     -d      Incident description (CLI mode)       —
+  --file            -f      Path to incident description file     —
+  --interactive     -i      Start interactive CLI mode            off
+  --serve           -s      Start REST API server                 off
+  --severity                low | medium | high | critical        auto
+  --provider                LLM provider (see table below)        config
+  --format                  markdown | pdf                        markdown
+  --output-dir              Directory for generated files         data/processed
+  --port                    API server port                       8000
+  --verbose         -v      Enable DEBUG logging                  off
+  --extended-help   -H      Show this extended guide              off
+  --list-providers          Show providers & API key status       off
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUPPORTED PROVIDERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Provider    Model              API Key Env Var        Local?
+  ─────────────────────────────────────────────────────────────────────────
+  openai      gpt-4o             OPENAI_API_KEY          No
+  anthropic   claude-sonnet-4    ANTHROPIC_API_KEY       No
+  deepseek    deepseek-chat      DEEPSEEK_API_KEY        No
+  minimax     MiniMax-M2.7       MINIMAX_API_KEY         No
+  kimi        moonshot-v1-128k   KIMI_API_KEY            No
+  qwen        qwen-max           QWEN_API_KEY            No
+  glm         glm-4-plus         GLM_API_KEY             No
+  ollama      llama3             (none — runs locally)   Yes
+
+  Run  python src/app.py --list-providers  to check which keys are configured.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  COMMON EXAMPLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  # Quick playbook with auto-detected severity
+  python src/app.py -d "Phishing email targeting HR department"
+
+  # Critical incident with specific provider + PDF output
+  python src/app.py -d "Data exfiltration from DB server" \\
+      --severity critical --provider anthropic --format pdf
+
+  # Interactive mode with verbose logging
+  python src/app.py -i -v
+
+  # Read from file, save to custom directory
+  python src/app.py -f incidents/ransomware.txt --output-dir ./reports
+
+  # Start API server on custom port
+  python src/app.py --serve --port 9000
+
+  # Use local Ollama (no API key needed)
+  python src/app.py -d "Suspicious login from foreign IP" --provider ollama
+
+  # Override default provider via environment
+  DEFAULT_PROVIDER=deepseek python src/app.py -d "Malware on workstation"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CONFIGURATION FILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  .env                          API keys and app settings
+                                cp .env.example .env  then fill in keys
+
+  config/model_config.yaml      Provider models, fallback chain, retry
+                                and rate-limit settings.
+
+  config/org_profile.yaml       Your org tech stack, SIEM, EDR, teams,
+                                and compliance frameworks. Set demo: false
+                                after filling in your real data.
+
+  config/prompts.yaml           Prompt templates for playbook generation.
+
+  Example .env:
+    OPENAI_API_KEY=sk-...
+    ANTHROPIC_API_KEY=sk-ant-...
+    DEFAULT_PROVIDER=openai
+    LOG_LEVEL=INFO
+    API_PORT=8000
+
+  Example org_profile.yaml (minimal):
+    demo: false
+    org:
+      name: "My Company"
+      industry: "technology"
+      size: "small"
+    tech_stack:
+      os: ["linux"]
+      cloud_providers: ["aws"]
+      siem: "splunk"
+      edr: "crowdstrike"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Issue                          Fix
+  ────────────────────────────────────────────────────────────────────────
+  "No provider available"         Set at least one API key in .env
+                                  or use --provider ollama (local)
+
+  "Description too short"         Provide at least 10 characters
+
+  Rate limit / 429 errors        Reduce request frequency or switch
+                                  to a different provider with --provider
+
+  PDF generation skipped         Install WeasyPrint:
+                                    pip install weasyprint
+
+  Ollama connection refused       Start Ollama first:
+                                    ollama serve && ollama pull llama3
+
+  ModuleNotFoundError             Install dependencies:
+                                    pip install -r requirements.txt
+
+  Fallback chain not working      Check config/model_config.yaml →
+                                  fallback_chain section is ordered
+""")
+
+
+def _show_provider_status() -> None:
+    """Display provider configuration status with API key availability check."""
+    from src.utils.config import get_model_config
+
+    config = get_model_config()
+    providers_cfg = config.get("providers", {})
+    default_provider = config.get("default_provider", "openai")
+    fallback_chain = config.get("fallback_chain", [])
+
+    click.echo("\n  Provider Status Check")
+    click.echo("  ══════════════════════════════════════════════════════════════")
+    click.echo(f"  Default provider : {default_provider}")
+    click.echo(f"  Fallback chain   : {' → '.join(fallback_chain)}")
+    click.echo()
+    click.echo("  {:<12} {:<20} {:<10} {:<6} {}".format(
+        "Provider", "Model", "Key Status", "Local", "Endpoint"
+    ))
+    click.echo("  {} {} {} {} {}".format(
+        "─" * 12, "─" * 20, "─" * 10, "─" * 6, "─" * 40
+    ))
+
+    for name in SUPPORTED_PROVIDERS:
+        prov_cfg = providers_cfg.get(name, {})
+        model = prov_cfg.get("model", "unknown")
+        api_base = prov_cfg.get("api_base", "—")
+        api_key_env = prov_cfg.get("api_key_env", "")
+        is_local = name == "ollama"
+
+        # Check if API key is set in environment
+        if is_local:
+            key_status = "N/A"
+        elif api_key_env:
+            key_val = os.environ.get(api_key_env, "")
+            key_status = "  ✓" if key_val.strip() else "  ✗"
+        else:
+            key_status = "  —"
+
+        local_marker = "Yes" if is_local else "No"
+        default_marker = " (default)" if name == default_provider else ""
+
+        click.echo("  {:<12} {:<20} {:<10} {:<6} {}{}".format(
+            name, model, key_status, local_marker, api_base, default_marker
+        ))
+
+    click.echo()
+    click.echo("  Legend:  ✓ = API key set in .env   ✗ = API key missing   N/A = local provider")
+    click.echo("  Tip:    Run 'python src/app.py --list-providers' anytime to check status.")
+    click.echo()
 
 
 if __name__ == "__main__":
