@@ -29,10 +29,11 @@ from pathlib import Path
 
 import click
 
-# Add project root to path for imports
+# Add project root to path for imports (needed when running as python src/app.py)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from src import __version__
 from src.utils.config import get_api_port, get_default_provider, get_log_level, load_yaml_config
 from src.utils.constants import SUPPORTED_PROVIDERS
 
@@ -71,6 +72,7 @@ def print_banner() -> None:
 @click.option("--list-providers", is_flag=True, help="List all supported providers and their API key status.")
 @click.option("--show-stack", is_flag=True, help="Display the current organization profile and tech stack.")
 @click.option("--setup-stack", is_flag=True, help="Interactive setup wizard for the organization profile.")
+@click.version_option(version=__version__, prog_name="ir-playbook")
 @click.pass_context
 def main(
     ctx: click.Context,
@@ -499,6 +501,35 @@ def _show_extended_help() -> None:
 
   Fallback chain not working      Check config/model_config.yaml →
                                   fallback_chain section is ordered
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  INSTALLED CLI MODE (pip install)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  After installing with pip install ., the ir-playbook command is
+  available globally from any directory:
+
+    # Install from the project directory
+    pip install .
+
+    # Or in development/editable mode
+    pip install -e .
+
+    # Now use from anywhere
+    ir-playbook -d "ransomware detected on server"
+    ir-playbook -i
+    ir-playbook --version
+    ir-playbook --show-stack
+    ir-playbook --setup-stack
+    ir-playbook --list-providers
+    ir-playbook -H
+    ir-playbook --serve --port 9000
+
+  Config files are stored in ~/.ir-playbook/config/ when running as an
+  installed package. The first run automatically copies defaults.
+
+  The traditional invocation still works from the project directory:
+    python src/app.py -d "incident description"
 """)
 
 

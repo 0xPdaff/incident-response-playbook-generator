@@ -55,11 +55,41 @@ flowchart TD
 
 ## 🚀 Installation
 
+### Standard Installation
+
 ```bash
 git clone https://github.com/0xPdaff/01-incident-response-playbook.git
 cd 01-incident-response-playbook
 pip install -r requirements.txt
 cp .env.example .env  # Add your API keys
+```
+
+### Install as CLI Tool (Optional)
+
+Install as a global CLI command, available from any directory:
+
+```bash
+# From the project directory
+pip install .
+
+# Or in development/editable mode
+pip install -e .
+
+# Now available globally
+ir-playbook -d "ransomware detected"
+ir-playbook -i
+ir-playbook --version
+ir-playbook --show-stack
+ir-playbook --setup-stack
+ir-playbook --list-providers
+ir-playbook -H
+```
+
+When installed as a package, config files are stored in `~/.ir-playbook/config/` and are automatically initialized on first run. The traditional usage methods still work from the project directory:
+
+```bash
+python src/app.py -d "incident description"  # direct execution
+python src/app.py --serve                    # API server
 ```
 
 ## 💻 Usage
@@ -141,6 +171,7 @@ The setup wizard guides you through configuring your organization name, industry
 | `--help` | | Show basic help | flag | off |
 | `--show-stack` | | Display org profile & tech stack | flag | off |
 | `--setup-stack` | | Interactive org profile setup wizard | flag | off |
+| `--version` | | Show version and exit | flag | off |
 
 ### Input Modes
 
