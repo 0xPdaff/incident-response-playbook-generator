@@ -85,8 +85,13 @@ class InferenceEngine:
         model = self._build_model_string(provider)
         api_key = self._get_api_key(provider)
         api_base = prov_config.get("api_base")
+        api_type = prov_config.get("api_type", "openai")
 
-        # Build kwargs
+        # Use Anthropic SDK for providers with anthropic-compatible API
+        if api_type == "anthropic":
+            return self._call_anthropic(messages, provider)
+
+        # Build kwargs for litellm (OpenAI-compatible providers)
         kwargs: dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -117,6 +122,66 @@ class InferenceEngine:
             return None
         except Exception as e:
             logger.error("Unexpected error from %s: %s", provider, e)
+            return None
+
+    def _call_anthropic(
+        self,
+        messages: list[dict[str, str]],
+        provider: str,
+    ) -> str | None:
+        """Make an LLM call using the Anthropic SDK (for Anthropic-compatible APIs).
+
+        Args:
+            messages: Chat messages in OpenAI format (will be converted).
+            provider: Provider name.
+
+        Returns:
+            Response text or None on failure.
+        """
+        import anthropic as anthropic_sdk
+
+        prov_config = self._get_provider_config(provider)
+        api_key = self._get_api_key(provider)
+        api_base = prov_config.get("api_base", "")
+        model = prov_config.get("model", "")
+
+        if not api_key:
+            logger.warning("No API key for Anthropic-compatible provider %s", provider)
+            return None
+
+        # Convert OpenAI-format messages to Anthropic format
+        system_msg = ""
+        anthropic_msgs = []
+        for msg in messages:
+            if msg["role"] == "system":
+                system_msg += msg["content"] + "\n"
+            else:
+                anthropic_msgs.append({"role": msg["role"], "content": msg["content"]})
+
+        try:
+            logger.info("Calling Anthropic-compatible provider: %s (model: %s)", provider, model)
+            client = anthropic_sdk.Anthropic(api_key=api_key, base_url=api_base)
+            kwargs: dict[str, Any] = {
+                "model": model,
+                "max_tokens": prov_config.get("max_tokens", 4096),
+                "messages": anthropic_msgs,
+            }
+            if system_msg.strip():
+                kwargs["system"] = system_msg.strip()
+
+            response = client.messages.create(**kwargs)
+
+            # Extract text from response (handle thinking blocks)
+            text_parts = []
+            for block in response.content:
+                if block.type == "text":
+                    text_parts.append(block.text)
+
+            content = "\n".join(text_parts)
+            logger.info("Anthropic call successful: %s (%d chars)", provider, len(content))
+            return content
+        except Exception as e:
+            logger.error("Anthropic-compatible error from %s: %s", provider, e)
             return None
 
     def _call_with_retry(

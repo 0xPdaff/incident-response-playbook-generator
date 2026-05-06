@@ -4,7 +4,7 @@
 enabled: true
 
 # Default provider (overridable via CLI flag or API request)
-default_provider: "openai"
+default_provider: "minimax"
 
 # Provider configurations
 providers:
@@ -36,8 +36,9 @@ providers:
     timeout: 60
 
   minimax:
-    model: "minimax/MiniMax-M2.7"
-    api_base: "https://api.minimax.chat/v1"
+    model: "MiniMax-M2.7"
+    api_base: "https://api.minimax.io/anthropic"
+    api_type: "anthropic"
     api_key_env: "MINIMAX_API_KEY"
     max_tokens: 4096
     temperature: 0.3
@@ -77,10 +78,10 @@ providers:
 
 # Fallback chain: if the primary fails, try these in order
 fallback_chain:
+  - "minimax"
   - "openai"
   - "anthropic"
   - "deepseek"
-  - "minimax"
   - "ollama"
 
 # Retry settings
