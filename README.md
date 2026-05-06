@@ -317,6 +317,20 @@ The demo script showcases all input modes and checks provider availability.
 - [ ] Custom knowledge base integration
 - [ ] Multi-language playbook support
 
+## 📚 References
+
+- [NIST SP 800-61 Rev. 2](https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final) — Computer Security Incident Handling Guide (core playbook structure)
+- [MITRE ATT&CK Framework](https://attack.mitre.org/) — Adversary tactics, techniques, and procedures referenced in classifications
+- [SANS Incident Handler's Handbook](https://www.sans.org/white-papers/33901/) — Practical incident response methodology
+- [FastAPI](https://fastapi.tiangolo.com/) — Modern async Python web framework used for the REST API
+- [Click](https://click.palletsprojects.com/) — Python CLI framework for composable command-line interfaces
+- [LiteLLM](https://github.com/BerriAI/litellm) — Unified interface for 100+ LLM providers
+- [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python) — Used for Anthropic-compatible providers (MiniMax)
+- [WeasyPrint](https://weasyprint.org/) — CSS-to-PDF renderer for professional playbook documents
+- [LangChain](https://python.langchain.com/) — Framework for building LLM-powered applications
+- [Pydantic](https://docs.pydantic.dev/) — Data validation using Python type annotations
+- [Eval-Driven Development (Anthropic)](https://docs.anthropic.com/en/docs/build-with-claude/evals) — Evaluation patterns for LLM behavior
+
 ## 📄 License
 
 MIT — See [LICENSE](LICENSE)
