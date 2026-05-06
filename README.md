@@ -55,13 +55,31 @@ flowchart TD
 
 ## 🚀 Installation
 
-### Standard Installation
+### Quick Install (from GitHub)
+
+Install directly without cloning — available as `ir-playbook` from any directory:
+
+```bash
+pip install git+https://github.com/0xPdaff/incident-response-playbook-generator.git
+
+# Verify
+ir-playbook --version
+
+# Set up API keys
+cp ~/.ir-playbook/config/.env.example ~/.ir-playbook/.env
+# Edit ~/.ir-playbook/.env with your API keys
+```
+
+Config files are automatically created in `~/.ir-playbook/` on first run.
+
+### Standard Installation (clone + develop)
 
 ```bash
 git clone https://github.com/0xPdaff/incident-response-playbook-generator.git
-cd 01-incident-response-playbook
-pip install -r requirements.txt
-cp .env.example .env  # Add your API keys
+cd incident-response-playbook-generator
+pip install -e .           # editable install
+cp .env.example .env      # Add your API keys
+ir-playbook --version
 ```
 
 ### Install as CLI Tool (Optional)
