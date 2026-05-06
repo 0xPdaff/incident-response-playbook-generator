@@ -1,0 +1,107 @@
+# Model Configuration
+
+# Enable/disable the agent (kill switch)
+enabled: true
+
+# Default provider (overridable via CLI flag or API request)
+default_provider: "openai"
+
+# Provider configurations
+providers:
+  openai:
+    model: "gpt-4o"
+    api_base: "https://api.openai.com/v1"
+    api_key_env: "OPENAI_API_KEY"
+    max_tokens: 4096
+    temperature: 0.3
+    top_p: 1.0
+    timeout: 60
+
+  anthropic:
+    model: "claude-sonnet-4-20250514"
+    api_base: "https://api.anthropic.com"
+    api_key_env: "ANTHROPIC_API_KEY"
+    max_tokens: 4096
+    temperature: 0.3
+    top_p: 1.0
+    timeout: 60
+
+  deepseek:
+    model: "deepseek/deepseek-chat"
+    api_base: "https://api.deepseek.com"
+    api_key_env: "DEEPSEEK_API_KEY"
+    max_tokens: 4096
+    temperature: 0.3
+    top_p: 1.0
+    timeout: 60
+
+  minimax:
+    model: "minimax/MiniMax-M2.7"
+    api_base: "https://api.minimax.chat/v1"
+    api_key_env: "MINIMAX_API_KEY"
+    max_tokens: 4096
+    temperature: 0.3
+    timeout: 60
+
+  kimi:
+    model: "moonshot-v1-128k"
+    api_base: "https://api.moonshot.cn/v1"
+    api_key_env: "KIMI_API_KEY"
+    max_tokens: 4096
+    temperature: 0.3
+    timeout: 60
+
+  qwen:
+    model: "qwen/qwen-max"
+    api_base: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key_env: "QWEN_API_KEY"
+    max_tokens: 4096
+    temperature: 0.3
+    timeout: 60
+
+  glm:
+    model: "glm-4-plus"
+    api_base: "https://open.bigmodel.cn/api/paas/v4"
+    api_key_env: "GLM_API_KEY"
+    max_tokens: 4096
+    temperature: 0.3
+    timeout: 60
+
+  ollama:
+    model: "ollama/llama3"
+    api_base: "http://localhost:11434"
+    api_key_env: ""
+    max_tokens: 4096
+    temperature: 0.3
+    timeout: 120
+
+# Fallback chain: if the primary fails, try these in order
+fallback_chain:
+  - "openai"
+  - "anthropic"
+  - "deepseek"
+  - "minimax"
+  - "ollama"
+
+# Retry settings
+retry:
+  max_retries: 3
+  backoff_factor: 2  # exponential: 2s, 4s, 8s
+  retry_on_status_codes:
+    - 429  # rate limit
+    - 500  # server error
+    - 502
+    - 503
+    - 504
+
+# Rate limiting
+rate_limit:
+  max_requests_per_minute: 10
+  enabled: true
+
+# Caching
+cache:
+  enabled: true
+  ttl_seconds: 3600  # 1 hour
+  backend: "file"    # file or memory
+  directory: "data/cache"

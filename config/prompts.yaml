@@ -1,0 +1,136 @@
+# Prompt Templates for Incident Response Playbook Generator
+
+classification:
+  system: |
+    You are a cybersecurity incident classification expert. Classify the following
+    incident description into one of these categories:
+    - malware: Malware, ransomware, trojan, worm, virus
+    - phishing: Email phishing, spear phishing, whaling, smishing
+    - unauthorized_access: Unauthorized access, credential compromise, account takeover
+    - data_breach: Data exfiltration, data leak, PII exposure
+    - ddos: Distributed denial of service, volumetric attack
+    - insider_threat: Malicious insider, policy violation, unauthorized data access
+    - supply_chain: Third-party compromise, vendor breach
+    - misconfiguration: Cloud misconfiguration, exposed service, default credentials
+    - web_attack: SQL injection, XSS, CSRF, API abuse
+    - physical: Physical access breach, device theft, tailgating
+
+    Also determine severity: low, medium, high, or critical.
+    Consider MITRE ATT&CK tactics that may apply.
+
+  user: |
+    Classify this incident:
+    ---
+    {incident_description}
+    ---
+
+    Respond in this exact JSON format:
+    {{
+      "incident_type": "<category>",
+      "severity": "<low|medium|high|critical>",
+      "mitre_tactics": ["<tactic1>", "<tactic2>"],
+      "mitre_techniques": ["<technique1>"],
+      "affected_assets_estimate": "<description>",
+      "confidence": <0.0-1.0>
+    }}
+
+playbook_generation:
+  system: |
+    You are a senior incident response consultant with 20+ years of experience.
+    You generate detailed, actionable incident response playbooks following NIST SP 800-61.
+
+    ORGANIZATION CONTEXT:
+    - Name: {org_name}
+    - Industry: {org_industry}
+    - Size: {org_size}
+    - Tech Stack: {tech_stack}
+    - SIEM: {siem}
+    - EDR: {edr}
+    - Firewall: {firewall}
+    - Identity Provider: {identity_provider}
+
+    INCIDENT CONTEXT:
+    - Type: {incident_type}
+    - Severity: {severity}
+    - MITRE ATT&CK Tactics: {mitre_tactics}
+    - MITRE ATT&CK Techniques: {mitre_techniques}
+
+    COMPLIANCE:
+    - Frameworks: {compliance_frameworks}
+    - Breach notification deadline: {breach_notification_hours} hours
+    - Law enforcement notification required: {requires_le_notification}
+
+    ESCALATION CONTACTS:
+    {escalation_contacts}
+
+    RULES:
+    1. Generate a complete playbook with all 5 NIST phases
+    2. Each phase MUST include:
+       - Objective (what we're trying to achieve)
+       - Actions (step-by-step, numbered)
+       - Commands (bash/PowerShell/SQL as appropriate for the tech stack)
+       - Timeline estimate
+       - Escalation triggers (when to escalate and to whom)
+    3. Commands must be realistic and safe (no destructive commands without explicit warnings)
+    4. Include specific tool names from the org's tech stack
+    5. Add a preamble with incident metadata and a disclaimer
+    6. For critical severity, include law enforcement and legal notification steps
+    7. For data breaches, include regulatory notification steps
+    8. Mark commands that could impact availability with ⚠️ WARNING
+
+  user: |
+    Generate a complete incident response playbook for:
+    ---
+    {incident_description}
+    ---
+
+    Incident Type: {incident_type}
+    Severity: {severity}
+
+    Structure the playbook in these phases:
+    1. DETECTION & ANALYSIS
+    2. CONTAINMENT
+    3. ERADICATION
+    4. RECOVERY
+    5. LESSONS LEARNED
+
+    For each phase, provide:
+    - Objective
+    - Step-by-step actions (numbered)
+    - Executable commands relevant to the org's tech stack
+    - Estimated timeline
+    - Escalation triggers
+
+    End with:
+    - Appendix A: Command reference summary
+    - Appendix B: Contact list
+    - Appendix C: Regulatory notification checklist (if applicable)
+
+severity_inference:
+  system: |
+    You are a cybersecurity severity assessment expert. Given an incident description,
+    determine the appropriate severity level.
+
+    Severity criteria:
+    - CRITICAL: Active threat to business operations, data exfiltration confirmed,
+      ransomware active, multiple systems affected, public-facing impact
+    - HIGH: Significant threat, limited containment possible, sensitive data at risk,
+      multiple users affected, potential regulatory impact
+    - MEDIUM: Contained threat, limited blast radius, non-sensitive data,
+      single system affected, no regulatory impact
+    - LOW: Minor incident, fully contained, no data risk, informational,
+      policy violation without malicious intent
+
+  user: |
+    Assess the severity of this incident:
+    ---
+    {incident_description}
+    ---
+
+    Respond with ONLY a JSON object:
+    {{
+      "severity": "<low|medium|high|critical>",
+      "reasoning": "<brief explanation>",
+      "recommended_escalation": "<team or role>",
+      "urgency": "<immediate|within_1h|within_4h|within_24h>"
+    }}

@@ -1,0 +1,57 @@
+# Organization Profile Template
+# Customize this file to match your organization's environment.
+
+# Organization metadata
+org:
+  name: "ACME Corp"
+  industry: "technology"
+  size: "medium"  # small (<100), medium (100-1000), large (>1000)
+  region: "north-america"
+
+# Technology stack — determines command types in playbooks
+tech_stack:
+  os:
+    - "linux"
+    - "windows"
+  cloud_providers:
+    - "aws"
+    - "azure"
+  primary_database: "postgresql"
+  container_platform: "kubernetes"
+  siem: "splunk"
+  edr: "crowdstrike"
+  firewall: "palo-alto"
+  identity_provider: "okta"
+
+# Team structure for escalation paths
+teams:
+  soc:
+    contact: "soc@acme.com"
+    escalation_threshold: "medium"
+  incident_commander:
+    contact: "ic@acme.com"
+    escalation_threshold: "high"
+  legal:
+    contact: "legal@acme.com"
+    escalation_threshold: "critical"
+  executive:
+    contact: "ciso@acme.com"
+    escalation_threshold: "critical"
+  communications:
+    contact: "comms@acme.com"
+    escalation_threshold: "high"
+
+# Compliance requirements
+compliance:
+  frameworks:
+    - "NIST CSF"
+    - "SOC 2"
+    - "GDPR"
+  data_breach_notification_hours: 72
+  requires_law_enforcement_notification: true
+
+# Communication channels
+channels:
+  primary: "slack"
+  incident_channel: "#incident-response"
+  bridge_number: "+1-555-0199"
